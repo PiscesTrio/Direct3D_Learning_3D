@@ -1,9 +1,11 @@
 #include "player.h"
 
 #include "cube.h"
+#include "debug_ostream.h"
 #include "model.h"
 #include "key_logger.h"
 #include "Light.h"
+#include "map.h"
 #include "player_cam_tps.h"
 using namespace DirectX;
 
@@ -61,24 +63,25 @@ void Player_Update(double elapsed_time)
 	gravityVelocity = velocity * static_cast<float>(elapsed_time);
 	position += gravityVelocity;
 
-	XMStoreFloat3(&g_PlayerPosition, position);
-	AABB player = Player_GetAABB();
-	AABB cube = Cube_GetAABB({ 3.0f, 0.5f, 2.0f });
-	
-	Hit hit = Collision_IsHitAABB(cube, player);
-	if (hit.isHit)
+	for (int i = 0; i < Map_ObjCount(); i++)
 	{
-		if (hit.normal.y>0.0f)
+
+		AABB player = Player_ConvertPositionToAABB(position);
+		AABB obj = Map_GetObject(i)->aabb;
+
+		Hit hit = Collision_IsHitAABB(obj, player);
+
+		if (hit.isHit)
 		{
-			//position -= gravityVelocity;//めり込む前の位置に戻す
-
-			position = XMVectorSetY(position, cube.max.y);
-			gravityVelocity = XMVectorZero();
-			velocity *= { 1.0f, 0.0f, 1.0f };
-			g_isJump = false;
+			if (hit.normal.y > 0.0f)
+			{
+				position = XMVectorSetY(position, obj.max.y);
+				velocity *= { 1.0f, 0.0f, 1.0f };
+				g_isJump = false;
+			}
 		}
-	}
 
+	}
 	//地面に到達したら止まる
 	if (XMVectorGetY(position) <= 0.0f)
 	{
@@ -139,32 +142,41 @@ void Player_Update(double elapsed_time)
 	velocity += -velocity * static_cast<float>(4.0f * elapsed_time);
 	position += velocity * static_cast<float>(elapsed_time);
 
-	if (hit.isHit)
+	for (int i = 0; i < Map_ObjCount(); i++)
 	{
-		if (hit.normal.x > 0.0f)
+
+		AABB player = Player_ConvertPositionToAABB(position);
+		AABB obj = Map_GetObject(i)->aabb;
+
+		Hit hit = Collision_IsHitAABB(obj, player);
+
+		if (hit.isHit)
 		{
-			position = XMVectorSetX(position, cube.max.x + 1.0f);
-			velocity*= { 0.0f,1.0f,1.0f };
-		}
-		else if (hit.normal.x < 0.0f)
-		{
-			position = XMVectorSetX(position, cube.min.x - 1.0f);
-			velocity *= { 0.0f, 1.0f, 1.0f };
-		}
-		else if (hit.normal.y < 0.0f)
-		{
-			position = XMVectorSetY(position, cube.min.y - 2.0f);
-			velocity *= { 1.0f, 0.0f, 1.0f };
-		}
-		else if (hit.normal.z > 0.0f)
-		{
-			position = XMVectorSetZ(position, cube.max.z + 1.0f);
-			velocity *= { 1.0f, 1.0f, 0.0f };
-		}
-		else if (hit.normal.z < 0.0f)
-		{
-			position = XMVectorSetZ(position, cube.min.z - 1.0f);
-			velocity *= { 1.0f, 1.0f, 0.0f };
+			if (hit.normal.x > 0.0f)
+			{
+				position = XMVectorSetX(position, obj.max.x + 1.0f);
+				velocity *= { 0.0f, 1.0f, 1.0f };
+			}
+			else if (hit.normal.x < 0.0f)
+			{
+				position = XMVectorSetX(position, obj.min.x - 1.0f);
+				velocity *= { 0.0f, 1.0f, 1.0f };
+			}
+			else if (hit.normal.y < 0.0f)
+			{
+				position = XMVectorSetY(position, obj.min.y - 2.0f);
+				velocity *= { 1.0f, 0.0f, 1.0f };
+			}
+			else if (hit.normal.z > 0.0f)
+			{
+				position = XMVectorSetZ(position, obj.max.z + 1.0f);
+				velocity *= { 1.0f, 1.0f, 0.0f };
+			}
+			else if (hit.normal.z < 0.0f)
+			{
+				position = XMVectorSetZ(position, obj.min.z - 1.0f);
+				velocity *= { 1.0f, 1.0f, 0.0f };
+			}
 		}
 	}
 
@@ -189,6 +201,14 @@ AABB Player_GetAABB()
 		{g_PlayerPosition.x - 1.0f,  g_PlayerPosition.y, g_PlayerPosition.z - 1.0f },
 		{g_PlayerPosition.x + 1.0f,g_PlayerPosition.y + 2.0f, g_PlayerPosition.z + 1.0f}
 	};
+}
+
+AABB Player_ConvertPositionToAABB(const DirectX::XMVECTOR& position)
+{
+	AABB aabb;
+	XMStoreFloat3(&aabb.min, position - XMVECTOR{ 1.0f,0.0f,1.0f });
+	XMStoreFloat3(&aabb.max, position + XMVECTOR{ 1.0f,2.0f,1.0f });
+	return aabb;
 }
 
 void Player_Draw()

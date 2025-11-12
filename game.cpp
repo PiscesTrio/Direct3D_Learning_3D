@@ -8,6 +8,7 @@
 #include "mesh_field.h"
 #include "sampler.h"
 #include "light.h"
+#include "map.h"
 #include "model.h"
 #include "player.h"
 #include "player_cam_tps.h"
@@ -30,7 +31,7 @@ void Game_Initialize()
 	//	{-0.359f,0.629f,0.689f}
 	//);
 	//Camera_Initialize();
-	
+	Map_Initialize();
 	g_pModel = ModelLoad("resource/model/tree.fbx", 1.0f);
 	g_pModel0 = ModelLoad("resource/model/heli.fbx", 0.5f);
 	Player_Initialize({ 0.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f });
@@ -80,6 +81,8 @@ void Game_Draw()
 	MeshField_Draw(mtxWorld);
 
 	Player_Draw();
+
+	Map_Draw();
 
 	XMMATRIX cube_mtxW = XMMatrixTranslation(3.0f, 0.5f, 2.0f);
 

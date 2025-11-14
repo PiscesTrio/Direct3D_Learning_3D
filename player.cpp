@@ -7,6 +7,7 @@
 #include "Light.h"
 #include "map.h"
 #include "player_cam_tps.h"
+#include "bullet.h"
 using namespace DirectX;
 
 namespace 
@@ -182,6 +183,17 @@ void Player_Update(double elapsed_time)
 
 	XMStoreFloat3(&g_PlayerPosition, position);
 	XMStoreFloat3(&g_PlayerVelocity, velocity);
+
+	//BULLET発射
+	if (KeyLogger_IsTrigger(KK_O))
+	{
+		XMFLOAT3 b_velocity;
+		XMFLOAT3 shoot_pos = g_PlayerPosition;
+		shoot_pos.y += 1.0f;
+		shoot_pos.x += 1.0f;
+		XMStoreFloat3(&b_velocity, XMLoadFloat3(&g_PlayerFront) * 10.0f);
+		Bullet_Create(shoot_pos, b_velocity);
+	}
 }
 
 XMFLOAT3& Player_GetPosition()

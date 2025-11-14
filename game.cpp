@@ -1,4 +1,6 @@
 #include "game.h"
+
+#include "bullet.h"
 #include "cube.h"
 #include "shader.h"
 #include "grid.h"
@@ -34,6 +36,7 @@ void Game_Initialize()
 	Map_Initialize();
 	g_pModel = ModelLoad("resource/model/tree.fbx", 1.0f);
 	g_pModel0 = ModelLoad("resource/model/heli.fbx", 0.5f);
+	Bullet_Initialize();
 	Player_Initialize({ 0.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f });
 	PlayerCamTps_Initialize();
 }
@@ -42,6 +45,23 @@ void Game_Update(double elapsed_time)
 {
 	//Camera_Update(elapsed_time);
 	Player_Update(elapsed_time);
+	Bullet_Update(elapsed_time);
+
+	for (int j = 0;j < Map_ObjCount();j++)
+	{
+		for (int i = 0; i < Bullet_GetCount();i++)
+		{
+			AABB bullet = Bullet_GetAABB(i);
+			AABB mapObj = Map_GetObject(j)->aabb;
+			if (Collision_IsOverLapAABB(bullet,mapObj))
+			{
+				Bullet_Destroy(i);
+				break;
+			}
+		}
+	}
+	
+
 	PlayerCamTps_Update(elapsed_time);
 	//PlayerCamTps_Update_Mouse(elapsed_time);
 
@@ -81,6 +101,7 @@ void Game_Draw()
 	MeshField_Draw(mtxWorld);
 
 	Player_Draw();
+	Bullet_Draw();
 
 	Map_Draw();
 
@@ -92,6 +113,8 @@ void Game_Draw()
 
 void Game_Finalize()
 {
+	Player_Finalize();
+	Bullet_Finalize();
 	Camera_Finalize();
 	Light_Finalize();
 }

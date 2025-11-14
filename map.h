@@ -5,6 +5,12 @@
 
 #include "collision.h"
 
+enum CategoryID
+{
+	GRASS = 0,
+	BRICK = 1,
+};
+
 struct MapObject
 {
 	int categoryId;

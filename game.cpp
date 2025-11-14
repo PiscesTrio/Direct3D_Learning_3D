@@ -1,5 +1,6 @@
 #include "game.h"
 
+#include "billboard.h"
 #include "bullet.h"
 #include "cube.h"
 #include "shader.h"
@@ -14,6 +15,7 @@
 #include "model.h"
 #include "player.h"
 #include "player_cam_tps.h"
+#include "texture.h"
 using namespace DirectX;
 
 namespace{
@@ -21,6 +23,7 @@ namespace{
 	double g_AccumulatedTime = 0.0;
 	MODEL* g_pModel = nullptr;
 	MODEL* g_pModel0 = nullptr;
+	int g_TextureId = -1;
 }
 
 void Game_Initialize()
@@ -39,6 +42,10 @@ void Game_Initialize()
 	Bullet_Initialize();
 	Player_Initialize({ 0.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f });
 	PlayerCamTps_Initialize();
+	g_TextureId = Texture_LoadFromFile(L"resource/texture/runningman001.png");
+
+	
+	Billboard_Initialize();
 }
 
 void Game_Update(double elapsed_time)
@@ -62,8 +69,8 @@ void Game_Update(double elapsed_time)
 	}
 	
 
-	PlayerCamTps_Update(elapsed_time);
-	//PlayerCamTps_Update_Mouse(elapsed_time);
+	//PlayerCamTps_Update(elapsed_time);
+	PlayerCamTps_Update_Mouse(elapsed_time);
 
 }
 
@@ -109,10 +116,18 @@ void Game_Draw()
 
 	Cube_Draw(cube_mtxW);
 
+	Billboard_Draw(
+		g_TextureId, 
+		{-5.0f,1.0f,-5.0f}, 
+		5.0f,5.0f, 
+		{0.0f,-0.5f} 
+	);
+
 }
 
 void Game_Finalize()
 {
+	Billboard_Finalize();
 	Player_Finalize();
 	Bullet_Finalize();
 	Camera_Finalize();

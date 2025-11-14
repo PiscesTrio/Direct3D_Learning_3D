@@ -5,6 +5,7 @@
 #include "shader_3d.h"
 #include "shader_field.h"
 #include "mouse.h"
+#include "shader_billboard.h"
 using namespace DirectX;
 namespace 
 {
@@ -31,6 +32,8 @@ namespace
 	float g_cameraDistance = 5.0f; // 距离，默认5米
 	bool g_lastRightButton = false;    // 上一帧右键
 	int  g_lastMouseX = 0, g_lastMouseY = 0; // 上一帧鼠标位置
+
+    XMFLOAT4X4 g_CameraMatrix{};
 }
 void PlayerCamTps_Initialize()
 {
@@ -73,6 +76,9 @@ void PlayerCamTps_Update(double elapsed_time)
 
 	Shader_3D_SetViewMatrix(mtxView);
 	Shader_Field_SetViewMatrix(mtxView);
+	Shader_Billboard_SetViewMatrix(mtxView);
+
+    XMStoreFloat4x4(&g_CameraMatrix, mtxView);
 
 	float aspectRatio = static_cast<float>(Direct3D_GetBackBufferWidth()) / static_cast<float>(Direct3D_GetBackBufferHeight());
 	float nearZ = 0.1f;
@@ -87,6 +93,7 @@ void PlayerCamTps_Update(double elapsed_time)
 
 	Shader_3D_SetProjectMatrix(mtxPerspective);
 	Shader_Field_SetProjectMatrix(mtxPerspective);
+    Shader_3D_SetProjectMatrix(mtxPerspective);
 }
 
 
@@ -157,6 +164,9 @@ void PlayerCamTps_Update_Mouse(double elapsed_time)
     XMMATRIX mtxView = XMMatrixLookAtLH(position, focus, up);
     Shader_3D_SetViewMatrix(mtxView);
     Shader_Field_SetViewMatrix(mtxView);
+    Shader_Billboard_SetViewMatrix(mtxView);
+
+    XMStoreFloat4x4(&g_CameraMatrix, mtxView);
 
     // 投影矩阵
     float aspectRatio = static_cast<float>(Direct3D_GetBackBufferWidth()) / static_cast<float>(Direct3D_GetBackBufferHeight());
@@ -166,6 +176,7 @@ void PlayerCamTps_Update_Mouse(double elapsed_time)
     XMMATRIX mtxPerspective = XMMatrixPerspectiveFovLH(fov, aspectRatio, nearZ, farZ);
     Shader_3D_SetProjectMatrix(mtxPerspective);
     Shader_Field_SetProjectMatrix(mtxPerspective);
+	Shader_Billboard_SetProjectMatrix(mtxPerspective);
 
     // 存储当前摄像机位置、前方向
     XMStoreFloat3(&eyePosition, {camPos.x,camPos.y,camPos.z});
@@ -183,6 +194,11 @@ const DirectX::XMFLOAT3& PlayerCamTps_GetFront()
 const DirectX::XMFLOAT3& PlayerCamTps_GetPosition()
 {
 	return eyePosition;
+}
+
+const DirectX::XMFLOAT4X4& PlayerCamTps_GetViewMatrix()
+{
+    return g_CameraMatrix;
 }
 
 
